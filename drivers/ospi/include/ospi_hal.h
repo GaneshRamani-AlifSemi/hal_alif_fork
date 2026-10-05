@@ -45,6 +45,7 @@
 #define OSPI_ERR_INVALID_STATE      -101            /* State Invalid */
 #define OSPI_ERR_CTRL_BUSY          -102            /* Controller Busy */
 #define OSPI_ERR_INVALID_HANDLE     -103            /* Handler not valid */
+#define OSPI_ERR_UNSUPPORTED        -104            /* Unsupported hardware capability */
 
 
 /*---- OSPI DFS BITS ------------------*/
@@ -71,6 +72,24 @@ struct ospi_driver_state {
 
 /*---- HAL_OSPI Instance Handler ---------------*/
 typedef int8_t HAL_OSPI_Handle_T;
+
+#define OSPI_SIGNAL_DELAY_MAX 23U
+
+/**
+ * Per-signal delay taps. Each tap is approximately 350 ps on Ensemble Gen2.
+ * All fields are required; zero means no added delay.
+ */
+struct ospi_signal_delay_config {
+	uint8_t txd[16];    /* Transmit data delays */
+	uint8_t rxd[16];    /* Receive data delays */
+	uint8_t ssioen[16]; /* Data output-enable delays */
+	uint8_t rxds[2];    /* Read strobe delays */
+	uint8_t txddm[2];   /* Data mask delays */
+	uint8_t dmoen[2];   /* Mask output-enable delays */
+	uint8_t sclk;       /* Serial clock delay */
+	uint8_t sclkn;      /* Inverted clock delay */
+	uint8_t ssn[2];     /* Chip-select delays */
+};
 
 typedef void hal_event_notify_cb(uint32_t event, void *u_data);
 
@@ -135,6 +154,16 @@ struct ospi_trans_config {
  */
 int32_t alif_hal_ospi_initialize(HAL_OSPI_Handle_T *handle,
 				struct ospi_init *init_d);
+
+/**
+ * \fn          alif_hal_ospi_apply_signal_delays
+ * \brief       Apply a complete set of signal delays
+ * \param[in]   handle  Instance handler
+ * \param[in]   config  Validated delay.
+ * \return      0 on Success, else error code
+ */
+int32_t alif_hal_ospi_apply_signal_delays(HAL_OSPI_Handle_T handle,
+			const struct ospi_signal_delay_config *config);
 
 /**
  * \fn          alif_hal_ospi_prepare_transfer
